@@ -1,0 +1,8 @@
+"jailbreak"
+{
+	"base"             "base"
+    "title"            "Jailbreak"
+    "menusystem"       "1"
+    "author_name"      "Chessnut, reworked by Lucas"
+    "maps"             "^jb_"
+}
