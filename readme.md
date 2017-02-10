@@ -7,6 +7,7 @@ get jb to usable state
 - fix playermodels, they dont get assigned properly when team switch
 - swap from m9k to tfa, used m9k for testing
 - rework the notify system
+- redo warden selection*
 
 gm additions
 - guns showing on playermodels
