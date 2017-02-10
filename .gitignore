@@ -2,5 +2,6 @@
 !.gitignore
 !readme.md
 !LICENSE.txt
-!addons/*
+!addons/m9k
+!addons/tfa_base
 !gamemode/jailbreak
