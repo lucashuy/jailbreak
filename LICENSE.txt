@@ -1,0 +1,15 @@
+Copyright (c) 2017 Lucas
+
+SCRIPT - THIS REFERS to any and all parts of this program EXCLUDING weapons packs in the addon folder
+YOU - REFERS TO the persons or company responsible for using and acquiring this SCRIPT
+MY - THIS REFERS to the persons that holds the current SCRIPT
+ORIGINAL OWNER - THIS REFERS to the persons that originally holds and developed this SCRIPT (Lucas)
+
+By using this SCRIPT, YOU agree to the following terms listed below;
+
+YOU may acquire and use this script for personal use
+YOU may modify and change any part of the SCRIPT
+
+YOU may not redistribute this SCRIPT for any reason unless you have explicit permission from the ORIGINAL OWNER
+YOU may not resell this script for any type of profit or income
+YOU may not rebrand this SCRIPT as your own
