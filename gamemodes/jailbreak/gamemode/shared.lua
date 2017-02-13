@@ -4,6 +4,7 @@ include("player_class/player_jb.lua")
 
 GM.Name = "Jailbreak"
 GM.Author = "Chessnut"
+GM.TeamBased = true
 //GM.NumRounds = 999999999999
 
 GM.RoundTime = 60 * 8

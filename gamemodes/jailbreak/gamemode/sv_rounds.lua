@@ -5,22 +5,26 @@ ROUND_END = 4
 
 JB_ROUND_STATE = JB_ROUND_STATE or ROUND_DEAD
 
+jb = jb or {}
+jb.config = jb.config or {}
+
+swapMapWeapons = {
+		weapon_famas = "tfcss_famas_alt",
+		weapon_m4a1 = "tfcss_m4a1_alt",
+		weapon_mp5navy = "tfcss_scout_alt",
+		weapon_ak47 = "tfcss_ak47_alt",
+		weapon_deagle = "tfcss_deagle_alt",
+		weapon_xm1014 = "tfcss_m3_alt",
+		weapon_m3 = "tfcss_m3_alt",
+		weapon_hegrenade = "tfcss_cssfrag_alt",
+}
+
 function GM:NewRound()
 	if (JB_ROUND_STATE == ROUND_END) then
 		JB_ROUND_STATE = ROUND_SETUP
 
 		game.CleanUpMap()
 
-		local swapMapWeapons = {
-			weapon_famas = "bb_famas_alt",
-			weapon_m4a1 = "bb_m4a1_alt",
-			weapon_mp5navy = "bb_scout_alt",
-			weapon_usp = "bb_usp_alt",
-			weapon_ak47 = "bb_ak47_alt",
-			weapon_deagle = "bb_deagle_alt",
-			weapon_xm1014 = "bb_m3_alt"
-		}
-		
 		for k, v in pairs(ents.FindByClass("weapon_*")) do
 			//v:SetMoveType(MOVETYPE_NONE)
 			if (swapMapWeapons[v:GetClass()]) then
@@ -31,7 +35,9 @@ function GM:NewRound()
 			end
 		end
 		
-		ents.GetMapCreatedEntity(1268):Remove() //close cell button
+		for k,v in pairs(jb.config["removeButtons"]) do
+			ents.GetMapCreatedEntity(v):Remove()
+		end
 		
 		self:SetGlobalVar("killer", NULL)
 		self:SetGlobalVar("victim", NULL)

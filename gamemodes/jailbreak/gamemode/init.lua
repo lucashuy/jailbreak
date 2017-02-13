@@ -10,6 +10,7 @@ AddCSLuaFile("cl_hooks.lua")
 util.AddNetworkString("jb_showMenu")
 util.AddNetworkString("jb_Notice")
 util.AddNetworkString("jb_Admin")
+util.AddNetworkString("jb_switchTeams")
 
 resource.AddFile("materials/chessnut/jailbreak/ring.png")
 resource.AddFile("materials/chessnut/jailbreak/arrow.png")
@@ -24,10 +25,20 @@ resource.AddWorkshop( "180507408" )
 resource.AddWorkshop( "181283903" )
 resource.AddWorkshop( "181656972" )
 */
+
+//tfa's base
 resource.AddWorkshop("415143062")
+//tfa's css weapons
+resource.AddWorkshop("481133630")
 
 for k, v in pairs( file.Find(GM.FolderName.."/gamemode/derma/*.lua", "LUA") ) do
 	AddCSLuaFile("derma/"..v)
+end
+
+for k, v in pairs( file.Find(GM.FolderName.."/gamemode/mapconfigs/*.lua", "LUA") ) do
+	if (v == (game.GetMap() .. ".lua")) then
+		include("mapconfigs/" .. v)
+	end
 end
 
 JB_SWAP_GUARD = JB_SWAP_GUARD or {}

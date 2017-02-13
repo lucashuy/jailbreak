@@ -1,3 +1,6 @@
+jb = jb or {}
+jb.config = jb.config or {}
+
 function GM:InitPostEntity()
 	self.BaseClass:InitPostEntity()
 
@@ -45,17 +48,19 @@ function GM:PlayerInitialSpawn(client)
 	end)
 end
 
-function GM:PlayerHurt(client, attacker, remaining, damage)
-	self:AdminNotify( tostring(client).." took "..damage.." damage by "..tostring(attacker) )
+function GM:PlayerHurt(victim, attacker, remaining, damage)
+	if (attacker:IsPlayer() && victim:IsPlayer()) then
+		self:AdminNotify("[" .. team.GetName(victim:Team()) .. "]" .. victim:Name() .. " was attacked for " .. tostring(math.floor(damage)) .. " by [" ..  team.GetName(attacker:Team()) .. "]" .. attacker:Name())
+	end
 end
 
 function GM:AdminNotify(message)
 	for k, v in pairs( player.GetAll() ) do
-		if ( v:IsAdmin() or ( v.CheckGroup and v:CheckGroup("moderator") ) ) then
+		//if ( v:IsAdmin() or ( v.CheckGroup and v:CheckGroup("moderator") ) ) then
 			net.Start("jb_Admin")
 				net.WriteString(message)
 			net.Send(v)
-		end
+		//end
 	end
 end
 
@@ -98,73 +103,48 @@ local secondary = {
 	"weapon_usp"
 }
 
-function GM:PlayerLoadout(client)
-	client:StripWeapons()
-	client:StripAmmo()
-	client:UnSpectate()
-	client:SetDSP(1)
-	client.madeTeams = nil
+function GM:PlayerLoadout(ply)
+	ply:StripWeapons()
+	ply:StripAmmo()
+	ply:UnSpectate()
+	ply:SetDSP(1)
+	ply.madeTeams = nil
 
-	if (client:Team() == TEAM_GUARD_DEAD) then
-		client:SetTeam(TEAM_GUARD)
-		client:SetModel(table.Random(self.GuardModels))
-	elseif (client:Team() == TEAM_PRISONER_DEAD) then
-		client:SetTeam(TEAM_PRISONER)
-		client:SetModel(table.Random(self.PrisonerModels))
+	if (ply:Team() == TEAM_GUARD_DEAD || ply:Team() == TEAM_GUARD) then
+		ply:SetTeam(TEAM_GUARD)
+		ply:SetModel(table.Random(self.GuardModels))
+	elseif (ply:Team() == TEAM_PRISONER_DEAD || ply:Team() == TEAM_PRISONER) then
+		ply:SetTeam(TEAM_PRISONER)
+		ply:SetModel(table.Random(self.PrisonerModels))
 	end
 
-	if ( self:ShouldPlayerSpectate(client) ) then
-		self:SpawnAsSpectator(client)
+	if ( self:ShouldPlayerSpectate(ply) ) then
+		self:SpawnAsSpectator(ply)
 
 		return
 	else		
-		client:Give("jb_fists")
+		ply:Give("jb_fists")
 	end
 	
-	client.addition = 100
-	client:SetWalkSpeed(200)
-	client:SetRunSpeed(200)
+	ply:SetWalkSpeed(200)
+	ply:SetRunSpeed(200)
+	ply:SetAvoidPlayers(false)
+	ply:SetNoCollideWithTeammates(true)
 
-	/*
-	local odds = math.random(1, 8)
-
-	if ( client:IsUserGroup("donator") or ( client.CheckGroup and client:CheckGroup("donator") ) ) then
-		odds = math.random(1, 4)
-	end
-	
-	if (client:Team() == TEAM_GUARD) then
-		selected = table.Random(self.GuardModels)
-		client:SetArmor(25)
-		client:SetWalkSpeed(client:GetWalkSpeed() + 10)
-		client:Give( table.Random(primary) )
-		client:Give( table.Random(secondary) )
-
-		client.addition = 110
-	elseif (odds == 3) then
-		client:Give("weapon_pistol")
-	elseif (odds == 4) then
-		client:Give("weapon_knife")
-	end
-	*/
-
-	client:SetRunSpeed(client:GetWalkSpeed() + client.addition)
-	client:SetAvoidPlayers(true)
-	client:SetNoCollideWithTeammates(true)
-
-	local spawn = self:PlayerSelectTeamSpawn(client:Team(), client)
+	local spawn = self:PlayerSelectTeamSpawn(ply:Team(), ply)
 
 	if ( IsValid(spawn) ) then
-		client:SetPos( spawn:GetPos() + Vector(0, 0, 16) )
+		ply:SetPos( spawn:GetPos() + Vector(0, 0, 16) )
 	end
 
-	if (client:Team() == TEAM_PRISONER) then
-		client:SetPlayerColor( Vector(1, 0.6, 0.05) )
+	if (ply:Team() == TEAM_PRISONER) then
+		ply:SetPlayerColor( Vector(1, 0.6, 0.05) )
 	else
-		client:SetPlayerColor( Vector(0, 0.5, 2) )
+		ply:SetPlayerColor( Vector(0, 0.5, 2) )
 	end
 
-	player_manager.SetPlayerClass(client, "player_jb")
-	player_manager.RunClass(client, "Spawn")
+	player_manager.SetPlayerClass(ply, "player_jb")
+	player_manager.RunClass(ply, "Spawn")
 end
 
 function GM:SelectSpawn(client, tries)
@@ -211,29 +191,30 @@ end
 local PREVENT_DROP = {}
 PREVENT_DROP[1] = "jb_fists"
 
-function GM:DoPlayerDeath(client, attacker, damageInfo)
-	MsgC(Color(0, 255, 0), tostring(client).." has been killed by "..tostring(attacker).."\n")
-	self:AdminNotify( tostring(client).." has been killed by "..tostring(attacker) )
-
-	client:AddDeaths(1)
+function GM:DoPlayerDeath(victim, attacker, damageInfo)
+	if (attacker:IsPlayer() && victim:IsPlayer()) then
+		self:AdminNotify("[" .. team.GetName(victim:Team()) .. "]" .. victim:Name() .. " was killed by [" ..  team.GetName(attacker:Team()) .. "]" .. attacker:Name())
+	end
+	
+	victim:AddDeaths(1)
 
 	if ( IsValid(attacker) and attacker:IsPlayer() ) then
-		if (attacker == client) then
+		if (attacker == victim) then
 			attacker:AddFrags(-1)
 		else
 			attacker:AddFrags(1)
 		end
 	end
 
-	local weapon = client:GetActiveWeapon()
+	local weapon = victim:GetActiveWeapon()
 	if (IsValid(weapon) and !table.HasValue(PREVENT_DROP, weapon:GetClass())) then
-		self:CreateGun(weapon:GetClass(), client:GetShootPos(), client:GetAngles())
+		self:CreateGun(weapon:GetClass(), victim:GetShootPos(), victim:GetAngles())
 	end
 
-	if (client:Team() == TEAM_PRISONER or client:Team() == TEAM_PRISONER_DEAD) then
-		client:SetPlayerColor( Vector(1, 0.6, 0.05) )
+	if (victim:Team() == TEAM_PRISONER or victim:Team() == TEAM_PRISONER_DEAD) then
+		victim:SetPlayerColor( Vector(1, 0.6, 0.05) )
 	else
-		client:SetPlayerColor( Vector(0, 0.5, 2) )
+		victim:SetPlayerColor( Vector(0, 0.5, 2) )
 	end
 end
 
@@ -316,7 +297,7 @@ local DEATH_PHRASES = {
 
 function GM:EntityTakeDamage(victim, dmg)
 	if(IsValid(victim) && IsValid(dmg:GetAttacker())) then
-		if(victim == ents.GetMapCreatedEntity(1267) && ents.GetMapCreatedEntity(1267):GetSaveTable()["m_vecFinalDest"] == Vector(0,0,0)) then //lol, googled for a solution to this and found jake's solution
+		if(victim == ents.GetMapCreatedEntity(jb.config["opencellsButton"]) && ents.GetMapCreatedEntity(jb.config["opencellsButton"]):GetSaveTable()["m_vecFinalDest"] == Vector(0,0,0)) then //lol, googled for a solution to this and found jake's solution
 			self:Notify(dmg:GetAttacker():Name() .. " has shot open the cells!")
 		end
 	end
@@ -488,21 +469,34 @@ function GM:OnPlayerHitGround(client)
 	client:ViewPunch( Angle(math.Rand(2.0, 2.25), 0.1, 0) )
 end
 
-function GM:PlayerUse(client, entity)
-	if (IsValid(client) && IsValid(entity)) then
-		if (client:Team() == TEAM_PRISONER_DEAD or client:Team() == TEAM_GUARD_DEAD) then
+function GM:PlayerButtonDown(ply, key)
+	if (key == IN_USE) then
+		print("hi")
+		for k,v in pairs(ents.FindInSphere(ply:GetPos(), 30)) do
+			if (string.match(tostring(v), "weapon_")) then
+				ply:Give(swapMapWeapons[v:GetClass()])
+				v:Remove()
+				break
+			end
+		end
+	end
+end
+
+function GM:PlayerUse(ply, entity)
+	if (IsValid(ply) && IsValid(entity)) then
+		if (ply:Team() == TEAM_PRISONER_DEAD or ply:Team() == TEAM_GUARD_DEAD) then
 			return false
 		end
 
-		if(entity == ents.GetMapCreatedEntity(1267) && ents.GetMapCreatedEntity(1267):GetSaveTable()["m_vecFinalDest"] == Vector(0,0,0)) then
-			self:Notify(client:Name() .. " has opened the cells!")
+		if(entity == ents.GetMapCreatedEntity(jb.config["opencellsButton"]) && ents.GetMapCreatedEntity(jb.config["opencellsButton"]):GetSaveTable()["m_vecFinalDest"] == Vector(0,0,0)) then
+			self:Notify(ply:Name() .. " has opened the cells!")
 		end
 		
 		if ( string.find(entity:GetClass(), "button") ) then			
-			if ( (client.nextPress or 0) < CurTime() ) then
-				self:AdminNotify(client:Name().." has pressed "..tostring(entity).." ("..tostring( entity:GetName() )..").")
+			if ( (ply.nextPress or 0) < CurTime() ) then
+				self:AdminNotify(ply:Name().." has pressed "..tostring(entity).." ("..tostring( entity:GetName() )..").")
 	
-				client.nextPress = CurTime() + 1.5
+				ply.nextPress = CurTime() + 1.5
 			end
 		end
 
@@ -510,40 +504,35 @@ function GM:PlayerUse(client, entity)
 	end
 end
 
-function GM:PlayerCanPickupWeapon(client, weapon)
-	//max weapons can pickup todo
-	if (self:PlayerUse(client, weapon) == false) then
-		return false
-	end
+function GM:PlayerCanPickupWeapon(ply, wep)
+	if (wep:GetClass() == "jb_fists") then return true end
 
-	local class = weapon:GetClass()
-
-	if (class == "jb_fists") then
-		return true
-	end
-
-	local activeWeapon = client:GetActiveWeapon()
-
-	if ( IsValid(activeWeapon) and activeWeapon:GetClass() == weapon:GetClass() ) then
-		local ammoType = activeWeapon:GetPrimaryAmmoType()
-		local ammoCount = client:GetAmmoCount(ammoType)
-
-		if (ammoCount <= 0) then
-			return true
+	if (ply:KeyDown(IN_USE)) then
+		local numPrimary, numSecondary = 0, 0
+		for k,v in pairs(ply:GetWeapons()) do
+			if (v.Slot == 0) then
+				numPrimary = numPrimary + 1
+			elseif (v.Slot == 1) then
+				numSecondary = numSecondary + 1
+			end
 		end
-	end
-
-	if (IsValid(weapon.RealOwner) and client == weapon.RealOwner) then
-		if ( weapon.OwnerPickup and weapon.OwnerPickup >= CurTime() ) then
+		
+		local wepClass = wep:GetClass()
+		
+		if (wep.OwnerPickup and wep.OwnerPickup >= CurTime()) then return false end
+		
+		if (ply:HasWeapon(wepClass)) then
 			return false
+		else
+			if (wep.Slot == 0 && numPrimary > 0) then
+				return false
+			elseif  (wep.Slot == 1 && numSecondary > 0) then
+				return false
+			end
 		end
-	end
-
-	if ( !client:HasWeapon(class) ) then
+		
 		return true
 	end
-
-	return false
 end
 
 function GM:PlayerCanHearPlayersVoice(listener, speaker)
@@ -625,48 +614,42 @@ function GM:PlayerSay(client, text, public)
 	return text
 end
 
-util.AddNetworkString("jb_Swap")
+function GM:PlayerEnterSwaplist(ply)
+	local currentPlyTeam = ply:Team()
 
-function GM:PlayerEnterSwaplist(client, index)
-	local teamID = client:Team()
-
-	if ( ( index == TEAM_GUARD and (teamID == TEAM_GUARD or teamID == TEAM_GUARD_DEAD) ) or ( index == TEAM_PRISONER and (teamID == TEAM_PRISONER or teamID == TEAM_PRISONER_DEAD) ) ) then
-		self:Notify("You have removed yourself from the swaplist.", client)
-
-		if (teamID == TEAM_GUARD or teamID == TEAM_GUARD_DEAD) then
-			for k, v in pairs(JB_SWAP_PRISONER) do
-				if (v == client) then
-					table.remove(JB_SWAP_PRISONER, k)
+	if ((currentPlyTeam == TEAM_GUARD || currentPlyTeam == TEAM_GUARD_DEAD) && table.HasValue(JB_SWAP_PRISONER, ply)) || ((currentPlyTeam == TEAM_PRISONER || currentPlyTeam == TEAM_PRISONER_DEAD && table.HasValue(JB_SWAP_GUARD, ply))) then
+		self:Notify("You have removed yourself from the swaplist to " .. ((currentPlyTeam == TEAM_GUARD || currentPlyTeam == TEAM_GUARD_DEAD) and "prisoners." or "guards."), ply)
+		
+		if (currentPlyTeam == TEAM_PRISONER || currentPlyTeam == TEAM_PRISONER_DEAD) then
+			for k,v in pairs(JB_SWAP_GUARD) do
+				if (v == ply) then
+					table.remove(JB_SWAP_GUARD, k)
+					break
 				end
 			end
 		else
-			for k, v in pairs(JB_SWAP_GUARD) do
-				if (v == client) then
-					table.remove(JB_SWAP_GUARD, k)
+			for k,v in pairs(JB_SWAP_PRISONER) do
+				if (v == ply) then
+					table.remove(JB_SWAP_PRISONER, k)
+					break
 				end
 			end
 		end
 	else
-		local swapped = true
-
-		if ((teamID == TEAM_GUARD or teamID == TEAM_GUARD_DEAD) and index == TEAM_PRISONER and !table.HasValue(JB_SWAP_PRISONER, client)) then
-			table.insert(JB_SWAP_PRISONER, client)
-			swapped = true
-		elseif ((teamID == TEAM_PRISONER or teamID == TEAM_PRISONER_DEAD) and index == TEAM_GUARD and !table.HasValue(JB_SWAP_GUARD, client)) then
-			table.insert(JB_SWAP_GUARD, client)
-			swapped = true
-		end
-
-		if (swapped) then
-			self:Notify("You are now in the swaplist for the "..team.GetName(index)..".", client)
+		if (!table.HasValue(JB_SWAP_GUARD, ply)) then
+			table.insert(JB_SWAP_GUARD, ply)
+			self:Notify("You have entered the swaplist for guards.", ply)
+		elseif (!table.HasValue(JB_SWAP_PRISONER, ply)) then
+			table.insert(JB_SWAP_PRISONER, ply)
+			self:Notify("You have entered the swaplist for prisoners.", ply)
 		end
 	end
 end
 
-net.Receive("jb_Swap", function(length, client)
-	local index = net.ReadUInt(8)
-
-	GAMEMODE:PlayerEnterSwaplist(client, index)
+net.Receive("jb_switchTeams", function(length, ply)
+	if (IsValid(ply)) then
+		GAMEMODE:PlayerEnterSwaplist(ply)
+	end
 end)
 
 function GM:ShowTeam(client)

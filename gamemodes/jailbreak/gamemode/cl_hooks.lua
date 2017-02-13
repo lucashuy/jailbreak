@@ -361,7 +361,7 @@ function GM:CalcView(client, origin, angles, fov)
 
 	//hell this is annoying
 	//note to self: DO NOT USE ANYTHING CLOSE TO 1 AS MULTIPLIER
-	view.angles = view.angles + Angle(speed * 0.6, strafe * -1.2, strafe*0.7)*0.01
+	view.angles = view.angles + Angle(speed * 0.6, strafe * -1.2, strafe*0.7)*0.5
 	view.fov = view.fov + speed
 
 	if (view.vm_angles) then
@@ -430,5 +430,5 @@ end)
 net.Receive("jb_Admin", function(length)
 	local message = net.ReadString()
 
-	MsgC(Color(255, 125, 50), "[ADMIN] "..message.."\n")
+	MsgC(Color(255, 125, 50), message.."\n")
 end)

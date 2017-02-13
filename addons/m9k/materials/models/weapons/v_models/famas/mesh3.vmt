@@ -1,6 +1,0 @@
-VertexLitGeneric
-{
-	"$baseTexture" "models\weapons\v_models\Famas\bodygrungesharp"
-	"$bumpmap" "Models\Weapons\V_Models\Famas\bodygrungesharp_normal"
-
-}
