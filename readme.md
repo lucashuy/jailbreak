@@ -1,12 +1,10 @@
 # todo
 
 get jb to usable state
-- work on scoreboard and weapon spawn menu
 - rework the notify system
 - redo the swapping system (dont swap prisoners to guards because that leads to more people not knowing guard rules)
 
 gm additions
-- guns showing on playermodels
 - freekill manager
 - specdm
 
