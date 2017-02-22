@@ -69,13 +69,14 @@ function GM:StartWardenVote()
 				self:Notify(warden:Name().." is the new warden!")
 				self:SetGlobalVar("warden", warden)
 				warden:SetArmor(25)
-				warden:SetModel(self.WardenModel)
 
 				JB_WARDEN_NOVOTE = false
 			end
 		end)
 
 		return true
+	end
+	/*
 	else
 		local warden = table.Random( team.GetPlayers(TEAM_GUARD) )
 
@@ -83,13 +84,30 @@ function GM:StartWardenVote()
 			self:Notify(warden:Name().." has randomly been chosen as the warden!")
 			self:SetGlobalVar("warden", warden)
 			warden:SetArmor(25)
-			warden:SetModel(self.WardenModel)
 		end
 	end
+	*/
 
 	return false
 end
 
+net.Receive("jb_optWarden", function(length, ply)
+	if (IsValid(ply)) then
+		if (ply:Team() == 2 || ply:Team() == 4) then
+			if ( JB_WARDEN_QUEUE[ply] ) then
+				JB_WARDEN_QUEUE[ply] = nil
+
+				GAMEMODE:Notify("You have opt-out of being a warden.", ply)
+			elseif (!JB_WARDEN_NOVOTE) then
+				JB_WARDEN_QUEUE[ply] = 0
+	
+				GAMEMODE:Notify("You have opt-in of being a warden.", ply)
+			end
+		end
+	end
+end)
+
+/*
 function GM:ShowSpare1(client)
 	if (client:Team() == TEAM_GUARD or client:Team() == TEAM_GUARD_DEAD) then
 		if ( JB_WARDEN_QUEUE[client] ) then
@@ -103,6 +121,7 @@ function GM:ShowSpare1(client)
 		end
 	end
 end
+*/
 
 net.Receive("jb_WardenChoice", function(length, client)
 	local index = net.ReadUInt(8)

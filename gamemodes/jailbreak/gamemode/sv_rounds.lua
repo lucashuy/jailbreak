@@ -17,6 +17,7 @@ swapMapWeapons = {
 		weapon_xm1014 = "tfcss_m3_alt",
 		weapon_m3 = "tfcss_m3_alt",
 		weapon_hegrenade = "tfcss_cssfrag_alt",
+		weapon_usp = "tfcss_usp_alt",
 }
 
 function GM:NewRound()
@@ -26,13 +27,17 @@ function GM:NewRound()
 		game.CleanUpMap()
 
 		for k, v in pairs(ents.FindByClass("weapon_*")) do
-			//v:SetMoveType(MOVETYPE_NONE)
 			if (swapMapWeapons[v:GetClass()]) then
 				local gunPos, gunAngle = v:GetPos(), v:GetAngles()
 				local gunSwap = swapMapWeapons[v:GetClass()]
 				v:Remove()
 				self:CreateGun(gunSwap, gunPos, gunAngle)
 			end
+		end
+		
+		//gah.
+		for k,v in pairs(ents.FindByClass("tfcss_*")) do
+			v:SetMoveType(MOVETYPE_NONE)
 		end
 		
 		for k,v in pairs(jb.config["removeButtons"]) do
@@ -111,6 +116,14 @@ function GM:PlayerDisconnected(client)
 end
 
 function GM:BalanceTeams()
+	if (team.NumPlayers(TEAM_GUARD) == 0) then
+		local unluckyPrisoner = team.GetPlayers(TEAM_PRISONER)[1]
+		if (IsValid(unluckyPrisoner)) then
+			unluckyPrisoner:SetTeam(TEAM_GUARD)
+		end
+		return
+	end
+
 	for k, v in ipairs(JB_SWAP_GUARD) do
 		if (IsValid(v)) then
 			local partner = table.GetFirstValue(JB_SWAP_PRISONER)
@@ -140,6 +153,7 @@ function GM:BalanceTeams()
 
 		if (!canBeGuard and difference > 1) then
 			v:SetTeam(TEAM_PRISONER)
+			self:Notify("You have been swapped automatically to maintain balance.", v)
 		end
 	end
 
@@ -154,12 +168,6 @@ function GM:BalanceTeams()
 			end
 		else
 			table.remove(JB_SWAP_GUARD, k)
-		end
-	end
-
-	for k, v in pairs(team.GetPlayers(TEAM_PRISONER)) do
-		if (self:PlayerCanBeGuard()) then
-			v:SetTeam(TEAM_GUARD)
 		end
 	end
 end
@@ -237,12 +245,14 @@ end
 
 hook.Add("Tick", "jb_RoundTick", function()
 	local start = GAMEMODE:GetGlobalVar("round_start")
-
+	
 	if (start and JB_ROUND_STATE == ROUND_ACTIVE) then
 		GAMEMODE:ShouldRoundEnd()
 
 		if ( start < CurTime() ) then
 			GAMEMODE:EndRound()
 		end
+	elseif (start == nil && JB_ROUND_STATE == ROUND_DEAD) then
+		GAMEMODE:EndRound()
 	end
 end)

@@ -1,11 +1,11 @@
 surface.CreateFont("navButtonFont", {
-	font = "Verdana",
+	font = "Arial",
 	size = 30,
-	weight = 650,
+	weight = 750,
 	antialias = true,
 })
 surface.CreateFont("regTextFont", {
-	font = "Verdana",
+	font = "Arial",
 	size = 25,
 	weight = 550,
 	antialias = true,
@@ -18,12 +18,12 @@ local function initializeMenu()
 	//WE ARE HACKING THE MAINFRAME
 	mainFrame = mainFrame or vgui.Create("DFrame")
 	mainFrame:SetSize(700, 500)
-	mainFrame:SetPos(ScrW() / 3.56, ScrH() / 5) //perfect
+	mainFrame:Center()
 	mainFrame:SetVisible(false)
 	mainFrame:SetDraggable(false)
 	mainFrame:ShowCloseButton(false)
 	mainFrame:MakePopup(true)
-	mainFrame:SetBackgroundBlur( true )
+	mainFrame:SetTitle("")
 	function mainFrame:Paint(w, h)
 		draw.RoundedBox(0, 0, 0, w, h, Color( 255, 255, 255, 255 ))
 	end
@@ -67,6 +67,29 @@ local function initializeMenu()
 		net.Start("jb_switchTeams")
 			net.WriteBit(true)
 		net.SendToServer()
+	end
+	local teamsWardenButton = vgui.Create("DButton", teamsPanel)
+	teamsWardenButton:SetFont("regTextFont")
+	teamsWardenButton:SetText("Opt In")
+	teamsWardenButton:SetTextColor(Color(0, 0, 0, 255))
+	teamsWardenButton:SetContentAlignment(5)
+	teamsWardenButton:SetSize(teamsPanel:GetWide() / 4, 50)
+	teamsWardenButton:SetPos(teamsPanel:GetWide() / 2.655, teamsPanel:GetTall() / 1.5)
+	teamsWardenButton:SetVisible(false)
+	function teamsWardenButton:Paint(w, h)
+		draw.RoundedBox(0, 0, 0, w, h, Color(200, 200, 200, 255))
+	end
+	function teamsWardenButton:DoClick()
+		self.opt = !self.opt
+		net.Start("jb_optWarden")
+		net.SendToServer()
+	end
+	
+	function teamsPanel:Think()
+		if (LocalPlayer():Team() == 2 || LocalPlayer():Team() == 4) then
+			if (!teamsWardenButton:IsVisible()) then teamsWardenButton:SetVisible(true) end
+			if (teamsWardenButton.opt) then teamsWardenButton:SetText("Opt Out") else teamsWardenButton:SetText("Opt In") end
+		end
 	end
 	
 	//panel2

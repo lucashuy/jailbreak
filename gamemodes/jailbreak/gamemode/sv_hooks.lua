@@ -1,6 +1,75 @@
 jb = jb or {}
 jb.config = jb.config or {}
 
+local DEATH_SOUNDS = {}
+DEATH_SOUNDS[TEAM_PRISONER] = {
+	Sound("vo/npc/male01/pain01.wav"),
+	Sound("vo/npc/male01/pain02.wav"),
+	Sound("vo/npc/male01/pain03.wav"),
+	Sound("vo/npc/male01/pain04.wav"),
+	Sound("vo/npc/male01/pain05.wav"),
+	Sound("vo/npc/male01/pain06.wav"),
+	Sound("vo/npc/male01/pain07.wav"),
+	Sound("vo/npc/male01/pain08.wav"),
+	Sound("vo/npc/male01/pain09.wav")
+}
+DEATH_SOUNDS[TEAM_GUARD] = {
+	Sound("npc/metropolice/die1.wav"),
+	Sound("npc/metropolice/die2.wav"),
+	Sound("npc/metropolice/die3.wav"),
+	Sound("npc/metropolice/die4.wav")
+}
+
+local DEATH_PHRASES = {
+	"was pwned by",
+	"was terminated by",
+	"was ended by",
+	"was destroyed by",
+	"was killed by",
+	"was annihilated by",
+	"was erased by",
+	"was assasinated by",
+	"was eradicated by",
+	"was executed by",
+	"was finished by",
+	"was murdered by",
+	"was neutralized by",
+	"was obliterated by",
+	"was smothered by",
+	"was slaughtered by",
+	"was wiped out by",
+	"was pronounced dead by",
+	"was eliminated by",
+	"was demolished by"
+}
+
+local gunsPrimary = {
+	"tfcss_m4a1_alt",
+	"tfcss_ak47_alt",
+	"tfcss_scout_alt",
+	"tfcss_mp5_alt",
+	"tfcss_ump45_alt",
+}
+
+local gunsSecondary = {
+	"tfcss_usp_alt",
+	"tfcss_usp_alt",
+	"tfcss_dualelites_alt",
+	"tfcss_fiveseven_alt",
+}
+
+local PREVENT_DROP = {}
+PREVENT_DROP[1] = "jb_fists"
+
+local function playerInArmoury(ply)
+	for k,v in pairs(ents.FindInBox(jb.config["armouryLocation"][1], jb.config["armouryLocation"][2])) do
+		if (v:IsPlayer() && v == ply) then
+			return true
+		end
+	end
+	return false
+end
+
 function GM:InitPostEntity()
 	self.BaseClass:InitPostEntity()
 
@@ -11,39 +80,27 @@ function GM:InitPostEntity()
 	game.ConsoleCommand("sv_gravity 505\n")
 end
 
-function GM:PlayerInitialSpawn(client)
-	timer.Simple(0.5, function()
-		if ( !IsValid(client) ) then
+function GM:PlayerInitialSpawn(ply)
+	timer.Simple(1, function() //changed from 0.5
+		if ( !IsValid(ply) ) then
 			return
 		end
 		
-		if ((self:PlayerCanBeGuard() and table.Count(JB_SWAP_GUARD) == 0) or (team.NumPlayers(TEAM_PRISONER) > 0 and team.NumPlayers(TEAM_GUARD) < 1)) then
-			client:SetTeam(TEAM_GUARD)
+		ply:SetTeam(TEAM_PRISONER)
+		ply:SetModel(table.Random(self.PrisonerModels))
+		
+		if ( self:ShouldPlayerSpectate(ply) ) then
+			self:SpawnAsSpectator(ply)
 		else
-			client:SetTeam(TEAM_PRISONER)
-		end
-
-		local guardModel = table.Random(self.GuardModels)
-		local prisonerModel = table.Random(self.PrisonerModels)
-
-		if (client:Team() == TEAM_GUARD) then
-			client:SetModel(guardModel)
-		else
-			client:SetModel(prisonerModel)
-		end
-
-		if ( self:ShouldPlayerSpectate(client) ) then
-			self:SpawnAsSpectator(client)
-		else
-			self:PlayerLoadout(client)
+			self:PlayerLoadout(ply)
 		end
 
 		self:HandleInitialRound()
 	end)
 
-	timer.Simple(5 + (client:Ping() / 250), function()
-		if ( IsValid(client) ) then
-			self:SendGlobalVars(client)
+	timer.Simple(5 + (ply:Ping() / 250), function()
+		if ( IsValid(ply) ) then
+			self:SendGlobalVars(ply)
 		end
 	end)
 end
@@ -55,12 +112,13 @@ function GM:PlayerHurt(victim, attacker, remaining, damage)
 end
 
 function GM:AdminNotify(message)
+	print(message)
 	for k, v in pairs( player.GetAll() ) do
-		//if ( v:IsAdmin() or ( v.CheckGroup and v:CheckGroup("moderator") ) ) then
+		if ( v:IsAdmin() or ( v.CheckGroup and v:CheckGroup("moderator") ) ) then
 			net.Start("jb_Admin")
 				net.WriteString(message)
 			net.Send(v)
-		//end
+		end
 	end
 end
 
@@ -74,8 +132,64 @@ function GM:SpawnAsSpectator(client)
 	end
 end
 
-function GM:PlayerSpawn(client)
-	self:PlayerLoadout(client)
+function GM:PlayerSpawn(ply)
+	ply:StripWeapons()
+	ply:StripAmmo()
+	ply:UnSpectate()
+	ply:SetDSP(1)
+	ply.madeTeams = nil
+	ply.hasLR = false
+	ply.isLastGuard = false
+	
+	if (ply:Team() == TEAM_GUARD_DEAD || ply:Team() == TEAM_GUARD) then
+		ply:SetTeam(TEAM_GUARD)
+		ply:SetModel(table.Random(self.GuardModels))
+	elseif (ply:Team() == TEAM_PRISONER_DEAD || ply:Team() == TEAM_PRISONER) then
+		ply:SetTeam(TEAM_PRISONER)
+		ply:SetModel(table.Random(self.PrisonerModels))
+	elseif (self:GetGlobalVar("warden") == ply) then
+		ply:SetModel(self.WardenModel)
+	end
+	
+	if ( self:ShouldPlayerSpectate(ply) ) then
+		self:SpawnAsSpectator(ply)
+		return
+	end
+	
+	if (ply:Team() == 2 && team.NumPlayers(TEAM_GUARD) == 1) then
+		ply.isLastGuard = true
+	end
+	
+	local spawn = self:PlayerSelectTeamSpawn(ply:Team(), ply)
+	if ( IsValid(spawn) ) then
+		ply:SetPos( spawn:GetPos() + Vector(0, 0, 16) )
+	end
+
+	if (ply:Team() == TEAM_PRISONER) then
+		ply:SetPlayerColor( Vector(1, 0.6, 0.05) )
+	else
+		ply:SetPlayerColor( Vector(0, 0.5, 2) )
+	end
+	
+	ply:SetWalkSpeed(200)
+	ply:SetRunSpeed(200)
+	ply:SetAvoidPlayers(false)
+	ply:SetNoCollideWithTeammates(true)
+	ply:SetCollisionGroup( COLLISION_GROUP_WEAPON )
+		
+	if (playerInArmoury(ply)) then
+		if (ply:Team() != 2 || !ply.rememberSelections) then
+			net.Start("jb_openGun")
+			net.Send(ply)
+		else
+			self:PlayerLoadout(ply)
+		end
+	else
+		ply:Give("jb_fists")
+	end
+	
+	player_manager.SetPlayerClass(ply, "player_jb")
+	player_manager.RunClass(ply, "Spawn")
 end
 
 function GM:PlayerSpray(client)
@@ -86,65 +200,34 @@ function GM:PlayerSpray(client)
 	return false
 end
 
-local primary = {
-	"weapon_ak47",
-	"weapon_m4",
-	"weapon_mp5",
-	"weapon_m249",
-	"weapon_m3",
-	"weapon_xm1014",
-	"weapon_mac10"
-}
-
-local secondary = {
-	"weapon_deagle",
-	"weapon_fiveseven",
-	"weapon_glock",
-	"weapon_usp"
-}
+net.Receive("jb_receieveGun", function(length, ply)
+	ply.rememberSelections = net.ReadBool()
+	ply.selectedPrimary = net.ReadString()
+	ply.selectedSecondary = net.ReadString()
+	
+	GAMEMODE:PlayerLoadout(ply)
+end)
 
 function GM:PlayerLoadout(ply)
 	ply:StripWeapons()
 	ply:StripAmmo()
-	ply:UnSpectate()
-	ply:SetDSP(1)
-	ply.madeTeams = nil
-
-	if (ply:Team() == TEAM_GUARD_DEAD || ply:Team() == TEAM_GUARD) then
-		ply:SetTeam(TEAM_GUARD)
-		ply:SetModel(table.Random(self.GuardModels))
-	elseif (ply:Team() == TEAM_PRISONER_DEAD || ply:Team() == TEAM_PRISONER) then
-		ply:SetTeam(TEAM_PRISONER)
-		ply:SetModel(table.Random(self.PrisonerModels))
-	end
-
-	if ( self:ShouldPlayerSpectate(ply) ) then
-		self:SpawnAsSpectator(ply)
-
-		return
-	else		
-		ply:Give("jb_fists")
-	end
+	ply:Give("jb_fists")
 	
-	ply:SetWalkSpeed(200)
-	ply:SetRunSpeed(200)
-	ply:SetAvoidPlayers(false)
-	ply:SetNoCollideWithTeammates(true)
-
-	local spawn = self:PlayerSelectTeamSpawn(ply:Team(), ply)
-
-	if ( IsValid(spawn) ) then
-		ply:SetPos( spawn:GetPos() + Vector(0, 0, 16) )
+	if (playerInArmoury(ply)) then //check again just in case if they somehow made it out of the armoury
+		ply.forceGive = true
+		if (ply.selectedPrimary == "random") then
+			ply:Give(table.Random(gunsPrimary))
+		else
+			ply:Give(ply.selectedPrimary)
+		end
+		
+		ply.forceGive = true
+		if (ply.selectedSecondary == "random") then
+			ply:Give(table.Random(gunsSecondary))
+		else
+			ply:Give(ply.selectedSecondary)
+		end
 	end
-
-	if (ply:Team() == TEAM_PRISONER) then
-		ply:SetPlayerColor( Vector(1, 0.6, 0.05) )
-	else
-		ply:SetPlayerColor( Vector(0, 0.5, 2) )
-	end
-
-	player_manager.SetPlayerClass(ply, "player_jb")
-	player_manager.RunClass(ply, "Spawn")
 end
 
 function GM:SelectSpawn(client, tries)
@@ -169,7 +252,7 @@ function GM:SelectSpawn(client, tries)
 			return true
 		end
 	end
-
+	
 	self:SelectSpawn(client, tries)
 end
 
@@ -187,10 +270,6 @@ function GM:CreateGun(class, position, angle)
 		return weapon
 	end
 end
-
-local PREVENT_DROP = {}
-PREVENT_DROP[1] = "jb_fists"
-
 function GM:DoPlayerDeath(victim, attacker, damageInfo)
 	if (attacker:IsPlayer() && victim:IsPlayer()) then
 		self:AdminNotify("[" .. team.GetName(victim:Team()) .. "]" .. victim:Name() .. " was killed by [" ..  team.GetName(attacker:Team()) .. "]" .. attacker:Name())
@@ -249,51 +328,9 @@ function GM:PlayerSwitchFlashlight(client, switchOn)
 	return false
 end
 
-local DEATH_SOUNDS = {}
-DEATH_SOUNDS[TEAM_PRISONER] = {
-	Sound("vo/npc/male01/pain01.wav"),
-	Sound("vo/npc/male01/pain02.wav"),
-	Sound("vo/npc/male01/pain03.wav"),
-	Sound("vo/npc/male01/pain04.wav"),
-	Sound("vo/npc/male01/pain05.wav"),
-	Sound("vo/npc/male01/pain06.wav"),
-	Sound("vo/npc/male01/pain07.wav"),
-	Sound("vo/npc/male01/pain08.wav"),
-	Sound("vo/npc/male01/pain09.wav")
-}
-DEATH_SOUNDS[TEAM_GUARD] = {
-	Sound("npc/metropolice/die1.wav"),
-	Sound("npc/metropolice/die2.wav"),
-	Sound("npc/metropolice/die3.wav"),
-	Sound("npc/metropolice/die4.wav")
-}
-
 function GM:PlayerDeathSound()
 	return true
 end
-
-local DEATH_PHRASES = {
-	"was pwned by",
-	"was terminated by",
-	"was ended by",
-	"was destroyed by",
-	"was killed by",
-	"was annihilated by",
-	"was erased by",
-	"was assasinated by",
-	"was eradicated by",
-	"was executed by",
-	"was finished by",
-	"was murdered by",
-	"was neutralized by",
-	"was obliterated by",
-	"was smothered by",
-	"was slaughtered by",
-	"was wiped out by",
-	"was pronounced dead by",
-	"was eliminated by",
-	"was demolished by"
-}
 
 function GM:EntityTakeDamage(victim, dmg)
 	if(IsValid(victim) && IsValid(dmg:GetAttacker())) then
@@ -305,7 +342,7 @@ end
 
 function GM:PlayerDeath(victim, weapon, killer)
 	--self.BaseClass:PlayerDeath(victim, weapon, killer)
-	
+		
 	if ( DEATH_SOUNDS[ victim:Team()] ) then
 		victim:EmitSound( table.Random( DEATH_SOUNDS[ victim:Team() ] ), 130 )
 	end
@@ -316,15 +353,13 @@ function GM:PlayerDeath(victim, weapon, killer)
 		victim:SetTeam(TEAM_PRISONER_DEAD)
 	end
 
-	if (team.NumPlayers(TEAM_PRISONER) == 1 and team.NumPlayers(TEAM_GUARD) > 0) then
-		local client = team.GetPlayers(TEAM_PRISONER)[1]
-
-		if (!client.jb_LastRequest) then
-			if ( IsValid(client) ) then
-				self:Notify(client:Name().." has the last request.")
-			end
-
-			client.jb_LastRequest = true
+	if (team.NumPlayers(TEAM_PRISONER) == 1 && team.NumPlayers(TEAM_GUARD) > 0) then
+		team.GetPlayers(TEAM_PRISONER)[1].hasLR = true
+		self:Notify(team.GetPlayers(TEAM_PRISONER)[1]:Name() .. " is the last prisoner alive.")
+	elseif (team.NumPlayers(TEAM_PRISONER) > 1 && team.NumPlayers(TEAM_GUARD) == 1) then
+		if (IsValid(team.GetPlayers(TEAM_GUARD)[1]) && !team.GetPlayers(TEAM_GUARD)[1].isLastGuard ) then //must be here for endround nuke on summer
+			team.GetPlayers(TEAM_GUARD)[1].isLastGuard = true
+			self:Notify(team.GetPlayers(TEAM_GUARD)[1]:Name() .. " is the last guard alive.")
 		end
 	end
 
@@ -353,14 +388,6 @@ function GM:PlayerDeath(victim, weapon, killer)
 	end
 
 	if (team.NumPlayers(TEAM_PRISONER) == 0 or team.NumPlayers(TEAM_GUARD) == 0) then
-		--[[
-		local entity = victim:GetRagdollEntity()
-
-		if ( !IsValid(entity) and IsValid(victim) ) then
-			entity = victim
-		end
-		--]]
-
 		if ( IsValid(physicsObject) and IsValid(killer) and killer:IsPlayer() ) then
 			physicsObject:ApplyForceCenter( killer:GetAimVector()*8600 + Vector(0, 0, 9600) )
 		end
@@ -459,27 +486,11 @@ function GM:PlayerShouldTakeDamage(victim, attacker)
 end
 
 function GM:GetFallDamage(client, fallSpeed)
-	//return 1
-	//return math.max( 0, math.ceil( 0.2418*fallSpeed - 141.75 ) )
-	//return ( fallSpeed / 8 )
 	return (( fallSpeed - 526.5 ) * (100 / 396))
 end
 
 function GM:OnPlayerHitGround(client)
 	client:ViewPunch( Angle(math.Rand(2.0, 2.25), 0.1, 0) )
-end
-
-function GM:PlayerButtonDown(ply, key)
-	if (key == IN_USE) then
-		print("hi")
-		for k,v in pairs(ents.FindInSphere(ply:GetPos(), 30)) do
-			if (string.match(tostring(v), "weapon_")) then
-				ply:Give(swapMapWeapons[v:GetClass()])
-				v:Remove()
-				break
-			end
-		end
-	end
 end
 
 function GM:PlayerUse(ply, entity)
@@ -505,8 +516,11 @@ function GM:PlayerUse(ply, entity)
 end
 
 function GM:PlayerCanPickupWeapon(ply, wep)
-	if (wep:GetClass() == "jb_fists") then return true end
-
+	if (wep:GetClass() == "jb_fists" || ply.forceGive) then
+		ply.forceGive = false
+		return true
+	end
+	
 	if (ply:KeyDown(IN_USE)) then
 		local numPrimary, numSecondary = 0, 0
 		for k,v in pairs(ply:GetWeapons()) do
@@ -528,6 +542,14 @@ function GM:PlayerCanPickupWeapon(ply, wep)
 				return false
 			elseif  (wep.Slot == 1 && numSecondary > 0) then
 				return false
+			end
+			
+			//so sloppy
+			if (string.match(tostring(wepClass), "weapon_") && !ply:HasWeapon(swapMapWeapons[wepClass])) then
+				ply:Give(swapMapWeapons[wepClass])
+				if (ply:HasWeapon(swapMapWeapons[wepClass])) then
+					wep:Remove()
+				end
 			end
 		end
 		
@@ -551,34 +573,32 @@ function GM:PlayerCanHearPlayersVoice(listener, speaker)
 	return true
 end
 
-function GM:ShowSpare1(client)
-	net.Start("jb_showMenu")
-	net.Send(client)
-end
+function GM:DropWeapon(ply)
+	local weapon = ply:GetActiveWeapon()
 
-function GM:DropWeapon(client)
-	local weapon = client:GetActiveWeapon()
-
-	if ( IsValid(weapon) ) then
+	if (IsValid(weapon)) then
 		local class = weapon:GetClass()
 
-		if ( IsValid(weapon) and !table.HasValue(PREVENT_DROP, class) ) then
-			local weapon = self:CreateGun( class, client:GetPos() + Vector(0, 0, 48) + client:GetAimVector()*64, client:GetAngles() )
+		if (IsValid(weapon) && !table.HasValue(PREVENT_DROP, class)) then
+			if (!playerInArmoury(ply)) then
+				local weapon = self:CreateGun( class, ply:GetPos() + Vector(0, 0, 48) + ply:GetAimVector()*64, ply:GetAngles() )
 
-			if ( IsValid(weapon) ) then
-				weapon.RealOwner = client
-				weapon.OwnerPickup = CurTime() + 1
+				if (IsValid(weapon)) then
+					weapon.RealOwner = ply
+					weapon.OwnerPickup = CurTime() + 1
 
-				local physicsObject = weapon:GetPhysicsObject()
+					local physicsObject = weapon:GetPhysicsObject()
 
-				if ( IsValid(physicsObject) ) then
-					physicsObject:ApplyForceCenter(client:GetVelocity() + client:GetAimVector() * 1000)
+					if (IsValid(physicsObject)) then
+						physicsObject:ApplyForceCenter(ply:GetVelocity() + ply:GetAimVector() * 10)
+					end
 				end
+
+				self:AdminNotify("[" .. team.GetName(ply:Team()) .. "]" .. ply:Name() .. " has dropped " .. class)
+			else
+				self:AdminNotify("[" .. team.GetName(ply:Team()) .. "]" .. ply:Name() .. " has dropped " .. class .. " while in the armoury")
 			end
-
-			self:AdminNotify("Player "..tostring(client).." has dropped "..class)
-
-			client:StripWeapon(class)
+			ply:StripWeapon(class)
 		end
 	end
 end
@@ -589,10 +609,6 @@ concommand.Add("jb_dropweapon", function(client, command, arguments)
 
 		client.jb_LastDrop = CurTime() + 0.5
 	end
-end)
-
-concommand.Add("jb_returnEntity", function(ply, command, args)
-	print(ply:GetEyeTrace().Entity:MapCreationID())
 end)
 
 function GM:Notify(message, receivers)
@@ -606,17 +622,58 @@ function GM:Notify(message, receivers)
 	end
 end
 
-function GM:PlayerSay(client, text, public)
+function GM:PlayerSay(ply, txt, public)
 	//REMEMBER THIS SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSs
 	//only ooc text can be seen
 	
 	//this overrides dangerous
-	return text
+	local sub = string.Explode(" ", txt)
+	if (sub[1] == "endround") then
+		GAMEMODE:EndRound()
+	elseif (sub[1] == "move") then
+		for k,v in pairs(player.GetAll()) do
+			if (string.match(v:Name(), sub[2])) then
+				v:Kill()
+				v:SetTeam(sub[3])
+				break
+			end
+		end
+	elseif (sub[1] == "slay") then
+		for k,v in pairs(player.GetAll()) do
+			if (string.match(v:Name(), sub[2])) then
+				v:Kill()
+				break
+			end
+		end
+	elseif (sub[1] == "give") then
+		for k,v in pairs(player.GetAll()) do
+			if (string.match(v:Name(), sub[2])) then
+				v.forceGive = true
+				v:Give("tfcss_" .. sub[3] .. "_alt")
+				break
+			end
+		end
+	elseif (sub[1] == "gb") then
+		for k,v in pairs(player.GetAll()) do
+			if (string.match(v:Name(), sub[2])) then
+				if (!sqlCheckGuardban(v)) then
+					sqlMakeGuardban(v, ply, sub[3], sub[4])
+				end
+				break
+			end
+		end
+	end
+	return txt
 end
 
-function GM:PlayerEnterSwaplist(ply)
+function GM:PlayerEnterSwaplist(ply)	
 	local currentPlyTeam = ply:Team()
 
+	if (sqlCheckGuardban(ply)) && (currentPlyTeam == TEAM_PRISONER || currentPlyTeam == TEAM_PRISONER_DEAD) then
+		self:Notify("You are guardbanned! You cannot join the guards team.", ply)
+		return
+	end
+	
 	if ((currentPlyTeam == TEAM_GUARD || currentPlyTeam == TEAM_GUARD_DEAD) && table.HasValue(JB_SWAP_PRISONER, ply)) || ((currentPlyTeam == TEAM_PRISONER || currentPlyTeam == TEAM_PRISONER_DEAD && table.HasValue(JB_SWAP_GUARD, ply))) then
 		self:Notify("You have removed yourself from the swaplist to " .. ((currentPlyTeam == TEAM_GUARD || currentPlyTeam == TEAM_GUARD_DEAD) and "prisoners." or "guards."), ply)
 		
@@ -636,10 +693,10 @@ function GM:PlayerEnterSwaplist(ply)
 			end
 		end
 	else
-		if (!table.HasValue(JB_SWAP_GUARD, ply)) then
+		if (currentPlyTeam == TEAM_PRISONER || currentPlyTeam == TEAM_PRISONER_DEAD && !table.HasValue(JB_SWAP_GUARD, ply)) then
 			table.insert(JB_SWAP_GUARD, ply)
 			self:Notify("You have entered the swaplist for guards.", ply)
-		elseif (!table.HasValue(JB_SWAP_PRISONER, ply)) then
+		elseif (currentPlyTeam == TEAM_GUARD || currentPlyTeam == TEAM_GUARD_DEAD && !table.HasValue(JB_SWAP_PRISONER, ply)) then
 			table.insert(JB_SWAP_PRISONER, ply)
 			self:Notify("You have entered the swaplist for prisoners.", ply)
 		end
@@ -651,6 +708,19 @@ net.Receive("jb_switchTeams", function(length, ply)
 		GAMEMODE:PlayerEnterSwaplist(ply)
 	end
 end)
+
+function GM:ShowHelp(ply)
+	if (playerInArmoury(ply)) then
+		net.Start("jb_openGun")
+		net.Send(ply)
+	end
+end
+
+function GM:ShowSpare1(ply)
+	net.Start("jb_showMenu")
+	net.Send(ply)
+end
+
 
 function GM:ShowTeam(client)
 	local warden = self:GetGlobalVar("warden")

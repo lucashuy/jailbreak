@@ -8,22 +8,28 @@ GM.TeamBased = true
 //GM.NumRounds = 999999999999
 
 GM.RoundTime = 60 * 8
-GM.GuardRatio = 0.65//default 0.5
+GM.GuardRatio = 0.6//default 0.5
+GM.InitialStart = false
 
-TEAM_PRISONER = 1
-TEAM_GUARD = 2
-TEAM_PRISONER_DEAD = 3
-TEAM_GUARD_DEAD = 4
+//thanks google
+function GM:CreateTeams()
+	TEAM_PRISONER = 1
+	TEAM_GUARD = 2
+	TEAM_PRISONER_DEAD = 3
+	TEAM_GUARD_DEAD = 4
+	
+	team.SetUp( TEAM_GUARD, "Guards", Color(40, 40, 255) )
+	team.SetSpawnPoint(TEAM_GUARD, "info_player_counterterrorist")
+	team.SetUp( TEAM_GUARD_DEAD, "Dead Guards", Color(0, 0, 170) )
+	team.SetSpawnPoint(TEAM_GUARD_DEAD, "info_player_counterterrorist")
 
-team.SetUp( TEAM_GUARD, "Guards", Color(25, 25, 255) )
-team.SetSpawnPoint(TEAM_GUARD, "info_player_counterterrorist")
-team.SetUp( TEAM_GUARD_DEAD, "Dead Guards", Color(0, 0, 100) )
-team.SetSpawnPoint(TEAM_GUARD_DEAD, "info_player_counterterrorist")
+	team.SetUp( TEAM_PRISONER, "Prisoners", Color(255, 40, 40) )
+	team.SetSpawnPoint(TEAM_PRISONER, "info_player_terrorist")
+	team.SetUp( TEAM_PRISONER_DEAD, "Dead Prisoners", Color(170, 0, 0) )
+	team.SetSpawnPoint(TEAM_PRISONER_DEAD, "info_player_terrorist")
+end
 
-team.SetUp( TEAM_PRISONER, "Prisoners", Color(255, 50, 50) )
-team.SetSpawnPoint(TEAM_PRISONER, "info_player_terrorist")
-team.SetUp( TEAM_PRISONER_DEAD, "Dead Prisoners", Color(100, 0, 0) )
-team.SetSpawnPoint(TEAM_PRISONER_DEAD, "info_player_terrorist")
+GM:CreateTeams()
 
 function GM:PlayerCanBeGuard()
 	if (#player.GetAll() == 1) then

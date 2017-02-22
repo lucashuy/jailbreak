@@ -388,12 +388,12 @@ function GM:CalcView(client, origin, angles, fov)
 end
 
 function GM:OnSpawnMenuOpen()
-	if (LocalPlayer():GetNWBool("amideathmatch", false)) then return end
+	//if (LocalPlayer():GetNWBool("amideathmatch", false)) then return end
 	RunConsoleCommand("jb_dropweapon")
 end
 
 function GM:Notify(message)
-	chat.AddText(Color(40, 155, 255), "[Jailbreak] ", Color(255, 255, 255), message)
+	chat.AddText(Color(40, 155, 255), "[Open Mint] ", Color(255, 255, 255), message)
 	
 	surface.PlaySound("buttons/button16.wav")
 end

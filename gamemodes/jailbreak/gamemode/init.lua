@@ -2,6 +2,7 @@ include("shared.lua")
 include("sv_warden.lua")
 include("sv_rounds.lua")
 include("sv_hooks.lua")
+include("sv_sqlmanager.lua")
 
 AddCSLuaFile("cl_init.lua")
 AddCSLuaFile("shared.lua")
@@ -11,20 +12,14 @@ util.AddNetworkString("jb_showMenu")
 util.AddNetworkString("jb_Notice")
 util.AddNetworkString("jb_Admin")
 util.AddNetworkString("jb_switchTeams")
+util.AddNetworkString("jb_openGun")
+util.AddNetworkString("jb_receieveGun")
+util.AddNetworkString("jb_optWarden")
 
 resource.AddFile("materials/chessnut/jailbreak/ring.png")
 resource.AddFile("materials/chessnut/jailbreak/arrow.png")
 resource.AddFile("models/weapons/v_fists.mdl")
 resource.AddFile("models/weapons/w_fists.mdl")
-
-/*
-resource.AddWorkshop( "108720350" )
-resource.AddWorkshop( "356485444" )
-resource.AddWorkshop( "552340348" )
-resource.AddWorkshop( "180507408" )
-resource.AddWorkshop( "181283903" )
-resource.AddWorkshop( "181656972" )
-*/
 
 //tfa's base
 resource.AddWorkshop("415143062")
@@ -38,6 +33,7 @@ end
 for k, v in pairs( file.Find(GM.FolderName.."/gamemode/mapconfigs/*.lua", "LUA") ) do
 	if (v == (game.GetMap() .. ".lua")) then
 		include("mapconfigs/" .. v)
+		break
 	end
 end
 
