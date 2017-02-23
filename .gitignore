@@ -4,5 +4,5 @@
 !.gitignore
 !readme.md
 !LICENSE.txt
-!/addons/*/*
+!/addons/
 !/gamemode/jailbreak/
