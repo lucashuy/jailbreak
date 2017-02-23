@@ -4,8 +4,8 @@
 !.gitignore
 !readme.md
 !LICENSE.txt
-!/addons/openmint
-!/addons/tfa_base
-!/addons/tfa_css
-!/addons/ulx
+!/addons/openmint/
+!/addons/tfa_base/
+!/addons/tfa_css/
+!/addons/ulx/
 !/gamemode/jailbreak/
