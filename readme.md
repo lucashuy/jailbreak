@@ -11,5 +11,8 @@ ulx
 - add ulx give, respawn, move
 - timed mute/gags
 
+server
+- setup fastdl -> summer (remember to bzip it), chessnut's waypoint
+
 notes
 - remember to fix PlayerSay so that it doesnt break chat commands from other addons -> make it so that only ded people can type to ded chat
