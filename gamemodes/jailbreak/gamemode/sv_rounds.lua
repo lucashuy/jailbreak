@@ -21,6 +21,9 @@ swapMapWeapons = {
 }
 
 function GM:NewRound()
+	//fixes this weird balancing issue
+	if (#player.GetAll() < 2) then return end
+
 	if (JB_ROUND_STATE == ROUND_END) then
 		JB_ROUND_STATE = ROUND_SETUP
 
@@ -116,9 +119,9 @@ function GM:PlayerDisconnected(client)
 end
 
 function GM:BalanceTeams()
-	if (team.NumPlayers(TEAM_GUARD) == 0) then
+	if (team.NumPlayers(TEAM_GUARD) == 0) then		
 		local unluckyPrisoner = team.GetPlayers(TEAM_PRISONER)[1]
-		if (IsValid(unluckyPrisoner)) then
+		if (IsValid(unluckyPrisoner) && !sqlCheckGuardban(unluckyPrisoner:SteamID())) then
 			unluckyPrisoner:SetTeam(TEAM_GUARD)
 		end
 		return

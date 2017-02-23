@@ -81,7 +81,8 @@ function GM:InitPostEntity()
 end
 
 function GM:PlayerInitialSpawn(ply)
-	timer.Simple(1, function() //changed from 0.5
+	//hey there, you loaded in too quickly for me to handle
+	timer.Simple(1, function()
 		if ( !IsValid(ply) ) then
 			return
 		end
@@ -627,49 +628,13 @@ function GM:PlayerSay(ply, txt, public)
 	//only ooc text can be seen
 	
 	//this overrides dangerous
-	local sub = string.Explode(" ", txt)
-	if (sub[1] == "endround") then
-		GAMEMODE:EndRound()
-	elseif (sub[1] == "move") then
-		for k,v in pairs(player.GetAll()) do
-			if (string.match(v:Name(), sub[2])) then
-				v:Kill()
-				v:SetTeam(sub[3])
-				break
-			end
-		end
-	elseif (sub[1] == "slay") then
-		for k,v in pairs(player.GetAll()) do
-			if (string.match(v:Name(), sub[2])) then
-				v:Kill()
-				break
-			end
-		end
-	elseif (sub[1] == "give") then
-		for k,v in pairs(player.GetAll()) do
-			if (string.match(v:Name(), sub[2])) then
-				v.forceGive = true
-				v:Give("tfcss_" .. sub[3] .. "_alt")
-				break
-			end
-		end
-	elseif (sub[1] == "gb") then
-		for k,v in pairs(player.GetAll()) do
-			if (string.match(v:Name(), sub[2])) then
-				if (!sqlCheckGuardban(v)) then
-					sqlMakeGuardban(v, ply, sub[3], sub[4])
-				end
-				break
-			end
-		end
-	end
 	return txt
 end
 
 function GM:PlayerEnterSwaplist(ply)	
 	local currentPlyTeam = ply:Team()
 
-	if (sqlCheckGuardban(ply)) && (currentPlyTeam == TEAM_PRISONER || currentPlyTeam == TEAM_PRISONER_DEAD) then
+	if (sqlCheckGuardban(ply:SteamID())) && (currentPlyTeam == TEAM_PRISONER || currentPlyTeam == TEAM_PRISONER_DEAD) then
 		self:Notify("You are guardbanned! You cannot join the guards team.", ply)
 		return
 	end
