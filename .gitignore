@@ -7,5 +7,5 @@
 !addons/**
 
 !gamemode/jailbreak
+!gamemode/jailbreak/*
 !gamemode/jailbreak/**
-!gamemode/jailbreak/*/**
