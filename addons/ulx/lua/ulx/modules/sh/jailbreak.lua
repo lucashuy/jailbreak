@@ -1,5 +1,8 @@
 local CATEGORY_NAME = "Jailbreak"
 
+jb = jb or {}
+jb.config = jb.config or {}
+
 /*
 	guardban/guardbanid
 */
@@ -124,8 +127,58 @@ unguardbanid:addParam{type=ULib.cmds.StringArg, hint="reason", ULib.cmds.optiona
 unguardbanid:defaultAccess(ULib.ACCESS_ADMIN)
 unguardbanid:help("Unbans the steamid from not being able to play on the guard team.")
 
+
+
 /*
 	endround
-	
-	ents.GetMapCreatedEntity( 1268 ):Fire("Use")
 */
+function ulx.endround(calling, reason)
+	if (JB_ROUND_STATE != ROUND_ACTIVE) then
+		ULib.tsayError(calling, "You cannot end the round if it is not active.")
+		return
+	end
+	
+	if (reason != "") then
+		ulx.fancyLogAdmin(calling, "#A has ended the round (#s)", reason)
+	else
+		ulx.fancyLogAdmin(calling, "#A has ended the round")
+	end
+end
+local endround = ulx.command("Jailbreak", "ulx endround", ulx.endround, "!endround")
+endround:addParam{type=ULib.cmds.StringArg, hint="reason", ULib.cmds.optional, ULib.cmds.takeRestOfLine}
+endround:defaultAccess(ULib.ACCESS_ADMIN)
+endround:help("Ends the current round.")
+
+
+
+/*
+	opencells
+*/
+function ulx.opencells(calling, reason)
+	ents.GetMapCreatedEntity(jb.config["openCellsButton"]):Fire("Use")
+	
+	if (reason != "") then
+		ulx.fancyLogAdmin(calling, "#A has opened the cells (#s)", reason)
+	else
+		ulx.fancyLogAdmin(calling, "#A has opened the cells")
+	end
+end
+local opencells = ulx.command("Jailbreak", "ulx opencells", ulx.opencells, "!opencells")
+opencells:addParam{type=ULib.cmds.StringArg, hint="reason", ULib.cmds.optional, ULib.cmds.takeRestOfLine}
+opencells:defaultAccess(ULib.ACCESS_ADMIN)
+opencells:help("Opens the cell doors.")
+
+
+
+/*
+	move
+*/
+function ulx.move(calling, target, steam, reason)
+	
+end
+local move = ulx.command("Jailbreak", "ulx move", ulx.move, "!move")
+move:addParam{type=ULib.cmds.PlayerArg}
+move:addParam{type=ULib.cmds.StringArg, hint="team", completes = {"prisoner", "guard", "spec", "spectator"}, ULib.cmds.restrictToCompletes}
+move:addParam{type=ULib.cmds.StringArg, hint="reason", ULib.cmds.optional, ULib.cmds.takeRestOfLine}
+move:defaultAccess(ULib.ACCESS_ADMIN)
+move:help("Unbans the target from not being able to play on the guard team.")
