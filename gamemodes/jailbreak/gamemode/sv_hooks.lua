@@ -496,7 +496,7 @@ end
 
 function GM:PlayerUse(ply, entity)
 	if (IsValid(ply) && IsValid(entity)) then
-		if (ply:Team() == TEAM_PRISONER_DEAD or ply:Team() == TEAM_GUARD_DEAD) then
+		if (ply:Team() == TEAM_PRISONER_DEAD || ply:Team() == TEAM_GUARD_DEAD || ply:Team() == 5) then
 			return false
 		end
 

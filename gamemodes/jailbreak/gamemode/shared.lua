@@ -27,6 +27,10 @@ function GM:CreateTeams()
 	team.SetSpawnPoint(TEAM_PRISONER, "info_player_terrorist")
 	team.SetUp( TEAM_PRISONER_DEAD, "Dead Prisoners", Color(170, 0, 0) )
 	team.SetSpawnPoint(TEAM_PRISONER_DEAD, "info_player_terrorist")
+	
+	TEAM_SPECTATOR = 5
+	team.SetUp(TEAM_SPECTATOR, "Spectators", Color(220, 220, 220, 255))
+	team.SetSpawnPoint(TEAM_SPECTATOR, "worldspawn") 
 end
 
 GM:CreateTeams()

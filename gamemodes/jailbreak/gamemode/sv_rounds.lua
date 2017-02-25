@@ -21,9 +21,6 @@ swapMapWeapons = {
 }
 
 function GM:NewRound()
-	//fixes this weird balancing issue
-	if (#player.GetAll() < 2) then return end
-
 	if (JB_ROUND_STATE == ROUND_END) then
 		JB_ROUND_STATE = ROUND_SETUP
 
@@ -176,6 +173,15 @@ function GM:BalanceTeams()
 end
 
 function GM:EndRound(winner)
+	//note to self, this prob wont fix it. need to investigate
+	
+	/*
+	if (#player.GetAll() < 2) then
+		self:Notify("There must be at least two players on for a new round to start!")
+		return
+	end
+	*/
+
 	JB_ROUND_STATE = ROUND_END
 		
 	if (winner) then
@@ -223,8 +229,8 @@ end
 
 
 function GM:ShouldPlayerSpectate(ply)
-	if ply.ForcedRespawn and JB_ROUND_STATE == ROUND_ACTIVE then return false end
-	return ply:Team() == TEAM_SPECTATOR or JB_ROUND_STATE ~= ROUND_SETUP
+	if ply.forceSpawn and JB_ROUND_STATE == ROUND_ACTIVE then return false end
+	return ply:Team() == TEAM_SPECTATOR or JB_ROUND_STATE != ROUND_SETUP
 end
 
 function GM:HandleInitialRound()
@@ -248,7 +254,7 @@ end
 
 hook.Add("Tick", "jb_RoundTick", function()
 	local start = GAMEMODE:GetGlobalVar("round_start")
-	
+		
 	if (start and JB_ROUND_STATE == ROUND_ACTIVE) then
 		GAMEMODE:ShouldRoundEnd()
 
