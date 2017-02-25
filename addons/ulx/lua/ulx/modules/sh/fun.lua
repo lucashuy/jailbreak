@@ -163,7 +163,7 @@ local function checkFireDeath( ply )
 		ply.ulx_ignited_until = nil
 	end
 end
-hook.Add( "PlayerDeath", "ULXCheckFireDeath", checkFireDeath, HOOK_MONITOR_HIGH )
+hook.Add( "PlayerDeath", "ULXCheckFireDeath", checkFireDeath )
 
 ------------------------------ Unigniteall ------------------------------
 function ulx.unigniteall( calling_ply )
@@ -612,7 +612,7 @@ local function jailDisconnectedCheck( ply )
 		ply.jail.unjail()
 	end
 end
-hook.Add( "PlayerDisconnected", "ULXJailDisconnectedCheck", jailDisconnectedCheck, HOOK_MONITOR_HIGH )
+hook.Add( "PlayerDisconnected", "ULXJailDisconnectedCheck", jailDisconnectedCheck, -20 )
 
 local function playerPickup( ply, ent )
 	if CLIENT then return end
@@ -621,88 +621,17 @@ local function playerPickup( ply, ent )
 		ent.physgunned_by[ ply ] = true
 	end
 end
-hook.Add( "PhysgunPickup", "ulxPlayerPickupJailCheck", playerPickup, HOOK_MONITOR_HIGH )
+hook.Add( "PhysgunPickup", "ulxPlayerPickupJailCheck", playerPickup, -20 )
 
 local function playerDrop( ply, ent )
 	if CLIENT then return end
-	if ent:IsPlayer() and ent.physgunned_by then
+	if ent:IsPlayer() then
 		ent.physgunned_by[ ply ] = nil
 	end
 end
 hook.Add( "PhysgunDrop", "ulxPlayerDropJailCheck", playerDrop )
 
 ------------------------------ Ragdoll ------------------------------
-local function ragdollPlayer( v )
-	if v:InVehicle() then
-		local vehicle = v:GetParent()
-		v:ExitVehicle()
-	end
-
-	ULib.getSpawnInfo( v ) -- Collect information so we can respawn them in the same state.
-
-	local ragdoll = ents.Create( "prop_ragdoll" )
-	ragdoll.ragdolledPly = v
-
-	ragdoll:SetPos( v:GetPos() )
-	local velocity = v:GetVelocity()
-	ragdoll:SetAngles( v:GetAngles() )
-	ragdoll:SetModel( v:GetModel() )
-	ragdoll:Spawn()
-	ragdoll:Activate()
-	v:SetParent( ragdoll ) -- So their player ent will match up (position-wise) with where their ragdoll is.
-	-- Set velocity for each peice of the ragdoll
-	local j = 1
-	while true do -- Break inside
-		local phys_obj = ragdoll:GetPhysicsObjectNum( j )
-		if phys_obj then
-			phys_obj:SetVelocity( velocity )
-			j = j + 1
-		else
-			break
-		end
-	end
-
-	v:Spectate( OBS_MODE_CHASE )
-	v:SpectateEntity( ragdoll )
-	v:StripWeapons() -- Otherwise they can still use the weapons.
-
-	ragdoll:DisallowDeleting( true, function( old, new )
-		if v:IsValid() then v.ragdoll = new end
-	end )
-	v:DisallowSpawning( true )
-
-	v.ragdoll = ragdoll
-	ulx.setExclusive( v, "ragdolled" )
-end
-
-local function unragdollPlayer( v )
-	v:DisallowSpawning( false )
-	v:SetParent()
-
-	v:UnSpectate() -- Need this for DarkRP for some reason, works fine without it in sbox
-
-	local ragdoll = v.ragdoll
-	v.ragdoll = nil -- Gotta do this before spawn or our hook catches it
-
-	if not ragdoll:IsValid() then -- Something must have removed it, just spawn
-		ULib.spawn( v, true )
-
-	else
-		local pos = ragdoll:GetPos()
-		pos.z = pos.z + 10 -- So they don't end up in the ground
-
-		ULib.spawn( v, true )
-		v:SetPos( pos )
-		v:SetVelocity( ragdoll:GetVelocity() )
-		local yaw = ragdoll:GetAngles().yaw
-		v:SetAngles( Angle( 0, yaw, 0 ) )
-		ragdoll:DisallowDeleting( false )
-		ragdoll:Remove()
-	end
-
-	ulx.clearExclusive( v )
-end
-
 function ulx.ragdoll( calling_ply, target_plys, should_unragdoll )
 	local affected_plys = {}
 	for i=1, #target_plys do
@@ -714,11 +643,76 @@ function ulx.ragdoll( calling_ply, target_plys, should_unragdoll )
 			elseif not v:Alive() then
 				ULib.tsayError( calling_ply, v:Nick() .. " is dead and cannot be ragdolled!", true )
 			else
-				ragdollPlayer( v )
+				if v:InVehicle() then
+					local vehicle = v:GetParent()
+					v:ExitVehicle()
+				end
+
+				ULib.getSpawnInfo( v ) -- Collect information so we can respawn them in the same state.
+
+				local ragdoll = ents.Create( "prop_ragdoll" )
+				ragdoll.ragdolledPly = v
+
+				ragdoll:SetPos( v:GetPos() )
+				local velocity = v:GetVelocity()
+				ragdoll:SetAngles( v:GetAngles() )
+				ragdoll:SetModel( v:GetModel() )
+				ragdoll:Spawn()
+				ragdoll:Activate()
+				v:SetParent( ragdoll ) -- So their player ent will match up (position-wise) with where their ragdoll is.
+				-- Set velocity for each peice of the ragdoll
+				local j = 1
+				while true do -- Break inside
+					local phys_obj = ragdoll:GetPhysicsObjectNum( j )
+					if phys_obj then
+						phys_obj:SetVelocity( velocity )
+						j = j + 1
+					else
+						break
+					end
+				end
+
+				v:Spectate( OBS_MODE_CHASE )
+				v:SpectateEntity( ragdoll )
+				v:StripWeapons() -- Otherwise they can still use the weapons.
+
+				ragdoll:DisallowDeleting( true, function( old, new )
+					v.ragdoll = new
+				end )
+				v:DisallowSpawning( true )
+
+				v.ragdoll = ragdoll
+				ulx.setExclusive( v, "ragdolled" )
+
 				table.insert( affected_plys, v )
 			end
 		elseif v.ragdoll then -- Only if they're ragdolled...
-			unragdollPlayer( v )
+			v:DisallowSpawning( false )
+			v:SetParent()
+
+			v:UnSpectate() -- Need this for DarkRP for some reason, works fine without it in sbox
+
+			local ragdoll = v.ragdoll
+			v.ragdoll = nil -- Gotta do this before spawn or our hook catches it
+
+			if not ragdoll:IsValid() then -- Something must have removed it, just spawn
+				ULib.spawn( v, true )
+
+			else
+				local pos = ragdoll:GetPos()
+				pos.z = pos.z + 10 -- So they don't end up in the ground
+
+				ULib.spawn( v, true )
+				v:SetPos( pos )
+				v:SetVelocity( ragdoll:GetVelocity() )
+				local yaw = ragdoll:GetAngles().yaw
+				v:SetAngles( Angle( 0, yaw, 0 ) )
+				ragdoll:DisallowDeleting( false )
+				ragdoll:Remove()
+			end
+
+			ulx.clearExclusive( v )
+
 			table.insert( affected_plys, v )
 		end
 	end
@@ -735,6 +729,7 @@ ragdoll:addParam{ type=ULib.cmds.BoolArg, invisible=true }
 ragdoll:defaultAccess( ULib.ACCESS_ADMIN )
 ragdoll:help( "ragdolls target(s)." )
 ragdoll:setOpposite( "ulx unragdoll", {_, _, true}, "!unragdoll" )
+
 
 local function ragdollSpawnCheck( ply )
 	if ply.ragdoll then
@@ -754,33 +749,7 @@ local function ragdollDisconnectedCheck( ply )
 		ply.ragdoll:Remove()
 	end
 end
-hook.Add( "PlayerDisconnected", "ULXRagdollDisconnectedCheck", ragdollDisconnectedCheck, HOOK_MONITOR_HIGH )
-
-local function removeRagdollOnCleanup()
-	local players = player.GetAll()
-	for i=1, #players do
-		local ply = players[i]
-		if ply.ragdoll then
-			ply.ragdollAfterCleanup = true
-			unragdollPlayer( ply )
-		end
-	end
-end
-hook.Add("PreCleanupMap","ULXRagdollBeforeCleanup", removeRagdollOnCleanup )
-
-local function createRagdollAfterCleanup()
-	local players = player.GetAll()
-	for i=1, #players do
-		local ply = players[i]
-		if ply.ragdollAfterCleanup then
-			ply.ragdollAfterCleanup = nil
-			timer.Simple( 0.1, function() -- Doesn't like us re-creating the ragdoll immediately
-				ragdollPlayer( ply )
-			end)
-		end
-	end
-end
-hook.Add("PostCleanupMap","ULXRagdollAfterCleanup", createRagdollAfterCleanup )
+hook.Add( "PlayerDisconnected", "ULXRagdollDisconnectedCheck", ragdollDisconnectedCheck )
 
 ------------------------------ Maul ------------------------------
 local zombieDeath -- We need these registered up here because functions reference each other.
@@ -987,12 +956,12 @@ checkMaulDeath = function( ply, weapon, killer )
 		hook.Remove( "Think", "MaulMoreDamageThink" )
 	end
 end
-hook.Add( "PlayerDeath", "ULXCheckMaulDeath", checkMaulDeath, HOOK_HIGH ) -- Hook it first because we're changing speed. Want others to override us.
+hook.Add( "PlayerDeath", "ULXCheckMaulDeath", checkMaulDeath, -15 ) -- Hook it first because we're changing speed. Want others to override us.
 
 local function maulDisconnectedCheck( ply )
 	checkMaulDeath( ply ) -- Just run it through the death function
 end
-hook.Add( "PlayerDisconnected", "ULXMaulDisconnectedCheck", maulDisconnectedCheck, HOOK_MONITOR_HIGH )
+hook.Add( "PlayerDisconnected", "ULXMaulDisconnectedCheck", maulDisconnectedCheck )
 
 ------------------------------ Strip ------------------------------
 function ulx.stripweapons( calling_ply, target_plys )
