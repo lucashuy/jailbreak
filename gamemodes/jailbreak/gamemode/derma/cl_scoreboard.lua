@@ -31,8 +31,8 @@ local function initScoreB()
 	scoreB:IsVisible(false)
 	scoreB:SetTitle("")
 	function scoreB:Paint(w, h)
-		draw.RoundedBox(0, 0, 0, w, h, Color(255, 255, 255, 255 ))
-		draw.RoundedBox(0, 0, 0, w, scoreB:GetTall() / 5, Color(0, 210, 255, 255))
+		draw.RoundedBox(0, 0, 0, w, h, Color(0, 195, 255, 190))
+		draw.RoundedBox(0, 0, 0, w, scoreB:GetTall() / 5, Color(0, 195, 255, 255))
 	end
 	function scoreB:Think()
 		if (!self.update || self.update < CurTime()) then

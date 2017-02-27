@@ -25,7 +25,7 @@ local function initializeMenu()
 	mainFrame:MakePopup(true)
 	mainFrame:SetTitle("")
 	function mainFrame:Paint(w, h)
-		draw.RoundedBox(0, 0, 0, w, h, Color( 255, 255, 255, 255 ))
+		draw.RoundedBox(0, 0, 0, w, h, Color(255, 255, 255, 50))
 	end
 	
 	//panels
@@ -34,7 +34,7 @@ local function initializeMenu()
 	teamsPanel:SetSize(mainFrame:GetWide(), mainFrame:GetTall() - 50)
 	teamsPanel:SetVisible(true)
 	function teamsPanel:Paint(w, h)
-		draw.RoundedBox(0, 0, 0, w, h, Color(255, 255, 255, 255))
+		draw.RoundedBox(0, 0, 0, w, h, Color(0, 195, 255, 180))
 	end
 	local teamsLabelMain = vgui.Create("DLabel", teamsPanel)
 	teamsLabelMain:SetFont("regTextFont")
@@ -60,7 +60,7 @@ local function initializeMenu()
 	end
 	function teamsJoinButton:OnCursorExited()
 		if (activeTab != 1) then
-			function self:Paint(w, h) draw.RoundedBox(0, 0, 0, w, h, Color(200, 200, 200, 255)) end
+			function self:Paint(w, h) draw.RoundedBox(0, 0, 0, w, h, Color(0, 195, 255, 180)) end
 		end
 	end
 	function teamsJoinButton:DoClick()
@@ -98,7 +98,7 @@ local function initializeMenu()
 	panel2:SetSize(mainFrame:GetWide(), mainFrame:GetTall() - 50)
 	panel2:SetVisible(false)
 	function panel2:Paint(w, h)
-		draw.RoundedBox(0, 0, 0, w, h, Color(255, 255, 255, 255))
+		draw.RoundedBox(0, 0, 0, w, h, Color(0, 195, 255, 180))
 	end
 	local label2 = vgui.Create("DLabel", panel2)
 	label2:SetFont("regTextFont")
@@ -114,7 +114,7 @@ local function initializeMenu()
 	panel3:SetSize(mainFrame:GetWide(), mainFrame:GetTall() - 50)
 	panel3:SetVisible(false)
 	function panel3:Paint(w, h)
-		draw.RoundedBox(0, 0, 0, w, h, Color(255, 255, 255, 255))
+		draw.RoundedBox(0, 0, 0, w, h, Color(0, 195, 255, 180))
 	end
 	local label3 = vgui.Create("DLabel", panel3)
 	label3:SetFont("regTextFont")
@@ -130,7 +130,7 @@ local function initializeMenu()
 	panel4:SetSize(mainFrame:GetWide(), mainFrame:GetTall() - 50)
 	panel4:SetVisible(false)
 	function panel4:Paint(w, h)
-		draw.RoundedBox(0, 0, 0, w, h, Color(255, 255, 255, 255))
+		draw.RoundedBox(0, 0, 0, w, h, Color(0, 195, 255, 180))
 	end
 	local label4 = vgui.Create("DLabel", panel4)
 	label4:SetFont("regTextFont")
@@ -148,7 +148,7 @@ local function initializeMenu()
 	teamsButton:SetContentAlignment(5)
 	teamsButton:SetSize(mainFrame:GetWide() / 4, 50)
 	function teamsButton:Paint(w, h)
-		draw.RoundedBox(0, 0, 0, w, h, Color(255, 255, 255, 255))
+		draw.RoundedBox(0, 0, 0, w, h, Color(0, 195, 255, 180))
 	end
 	function teamsButton:OnCursorEntered()
 		if (activeTab != 0) then
@@ -163,7 +163,7 @@ local function initializeMenu()
 	function teamsButton:DoClick()
 		activeTab = 0
 		paintTabsStock()
-		function self:Paint(w, h) draw.RoundedBox(0, 0, 0, w, h, Color(255, 255, 255, 255)) end
+		function self:Paint(w, h) draw.RoundedBox(0, 0, 0, w, h, Color(0, 195, 255, 180)) end
 		
 		unloadPanels()
 		teamsPanel:SetVisible(true)
@@ -193,7 +193,7 @@ local function initializeMenu()
 	function tab2:DoClick()
 		activeTab = 1
 		paintTabsStock()
-		function self:Paint(w, h) draw.RoundedBox(0, 0, 0, w, h, Color(255, 255, 255, 255)) end
+		function self:Paint(w, h) draw.RoundedBox(0, 0, 0, w, h, Color(0, 195, 255, 180)) end
 		
 		unloadPanels()
 		panel2:SetVisible(true)
@@ -223,7 +223,7 @@ local function initializeMenu()
 	function tab3:DoClick()
 		activeTab = 2
 		paintTabsStock()
-		function self:Paint(w, h) draw.RoundedBox(0, 0, 0, w, h, Color(255, 255, 255, 255)) end
+		function self:Paint(w, h) draw.RoundedBox(0, 0, 0, w, h, Color(0, 195, 255, 180)) end
 		
 		unloadPanels()
 		panel3:SetVisible(true)
@@ -253,7 +253,7 @@ local function initializeMenu()
 	function tab4:DoClick()
 		activeTab = 3
 		paintTabsStock()
-		function self:Paint(w, h) draw.RoundedBox(0, 0, 0, w, h, Color(255, 255, 255, 255)) end
+		function self:Paint(w, h) draw.RoundedBox(0, 0, 0, w, h, Color(0, 195, 255, 180)) end
 		
 		unloadPanels()
 		panel4:SetVisible(true)
