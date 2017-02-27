@@ -107,8 +107,10 @@ function GM:PlayerInitialSpawn(ply)
 end
 
 function GM:PlayerHurt(victim, attacker, remaining, damage)
-	if (attacker:IsPlayer() && victim:IsPlayer()) then
-		self:AdminNotify("[" .. team.GetName(victim:Team()) .. "]" .. victim:Name() .. " was attacked for " .. tostring(math.floor(damage)) .. " by [" ..  team.GetName(attacker:Team()) .. "]" .. attacker:Name())
+	if (attacker:IsPlayer() && victim:IsPlayer() && attacker != victim) then
+		if (victim.getLastAttacker || victim.getLastAttacker != attacker)
+		victim.getLastAttacker = attacker	
+		self:AdminNotify("[" .. team.GetName(victim:Team()) .. "]" .. victim:Name() .. " was attacked by [" ..  team.GetName(attacker:Team()) .. "]" .. attacker:Name())
 	end
 end
 
@@ -506,7 +508,7 @@ function GM:PlayerUse(ply, entity)
 		
 		if ( string.find(entity:GetClass(), "button") ) then			
 			if ( (ply.nextPress or 0) < CurTime() ) then
-				self:AdminNotify(ply:Name().." has pressed "..tostring(entity).." ("..tostring( entity:GetName() )..").")
+				self:AdminNotify("[" .. team.GetName(ply:GetTeam()) .. "]" .. ply:Name().." has pressed " .. tostring(entity).." ("..tostring( entity:GetName() )..").")
 	
 				ply.nextPress = CurTime() + 1.5
 			end
@@ -624,10 +626,6 @@ function GM:Notify(message, receivers)
 end
 
 function GM:PlayerSay(ply, txt, public)
-	//REMEMBER THIS SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSs
-	//only ooc text can be seen
-	
-	//this overrides dangerous
 	return txt
 end
 
