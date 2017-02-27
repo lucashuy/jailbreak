@@ -1,5 +1,4 @@
 # higher priority
-- fix gamemode cold start from < 2 players
 - fix chat (make it so that people that are dead cannot speak to live people? lets see how people like this chat right now)
 - freekill manager (will prob have to write my own for jb. tommy's is really tailored for ttt)
 
