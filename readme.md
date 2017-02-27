@@ -1,16 +1,10 @@
-# todo
+#higher priority
+- fix gamemode cold start from < 2 players
+- fix chat (make it so that people that are dead cannot speak to live people? lets see how people like this chat right now)
 
-get jb to usable state
-- redo the autoswap from < 2 players. it dont work no i cannot fix anyhit
+#medium priority
+- anticheat (maybe use QAC for now until i get around to making my own. QAC can be bypassed)
 
-gm additions
-- freekill manager -> lets see if i can implement tommy's into jb
-- specdm -> prob need to rewrite it
-
-ulx
-- timed mute/gags
-
-notes
-- remember to fix PlayerSay so that it doesnt break chat commands from other addons -> make it so that only ded people can type to ded chat
-
-Would be an interesting project to make my own anticheat.
+#lower priority
+- specdm (complete rewrite)
+- pointshop. people want to show off their skills by putting things on their player. ill add that when people start asking for it
