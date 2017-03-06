@@ -25,7 +25,9 @@ function GM:NewRound()
 		JB_ROUND_STATE = ROUND_SETUP
 
 		game.CleanUpMap()
-
+		
+		ents.GetMapCreatedEntity(1268).doorOpen = false
+		
 		for k, v in pairs(ents.FindByClass("weapon_*")) do
 			if (swapMapWeapons[v:GetClass()]) then
 				local gunPos, gunAngle = v:GetPos(), v:GetAngles()
@@ -34,6 +36,13 @@ function GM:NewRound()
 				self:CreateGun(gunSwap, gunPos, gunAngle)
 			end
 		end
+		
+		/*
+		for k, v in pairs(jb.config["gunspawns"]) do
+			for i, o in pairs(v) do
+				self:CreateGun(i, o, Vector(0, 0, 0))
+			end
+		end*/
 		
 		//gah.
 		for k,v in pairs(ents.FindByClass("tfcss_*")) do
@@ -81,10 +90,12 @@ function GM:NewRound()
 				end
 
 				self:Notify("A new round has started!")
+				print("[JB] A new round has started!")
 				self:SetGlobalVar("round_start", CurTime() + self.RoundTime)
 
 				timer.Simple(1, function()
 					self:Notify("Prisoners have been muted for the first thirty seconds of the round.")
+					print("[JB] Prisoners have been muted for the first thirty seconds of the round.")
 				end)
 
 				self.VoiceTime = CurTime() + 30
@@ -93,6 +104,7 @@ function GM:NewRound()
 
 				timer.Create("jb_Unmute", 29.5, 1, function()
 					self:Notify("Prisoners have now been unmuted.")
+					print("[JB] Prisoners have now been unmuted.")
 				end)
 
 				JB_ROUND_STATE = ROUND_ACTIVE
@@ -172,16 +184,16 @@ function GM:BalanceTeams()
 	end
 end
 
+local firstMessage = true
 function GM:EndRound(winner)
-	//note to self, this prob wont fix it. need to investigate
-	
-	/*
-	if (#player.GetAll() < 2) then
-		self:Notify("There must be at least two players on for a new round to start!")
+	if (#player.GetAll() < 2 && firstMessage) then
+		self:Notify("There must be at least two people to start the game!")
+		firstMessage = false
 		return
 	end
-	*/
 
+	firstMessage = true
+	
 	JB_ROUND_STATE = ROUND_END
 		
 	if (winner) then

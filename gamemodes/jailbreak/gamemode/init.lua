@@ -36,6 +36,3 @@ for k, v in pairs( file.Find(GM.FolderName.."/gamemode/mapconfigs/*.lua", "LUA")
 		break
 	end
 end
-
-JB_SWAP_GUARD = JB_SWAP_GUARD or {}
-JB_SWAP_PRISONER = JB_SWAP_PRISONER or {}

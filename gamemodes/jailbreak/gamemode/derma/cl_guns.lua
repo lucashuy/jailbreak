@@ -23,7 +23,7 @@ local gunsPrimary = {
 
 local gunsSecondary = {
 	["USP"] = "tfcss_usp_alt",
-	["DEAGLE"] = "tfcss_usp_alt",
+	["DEAGLE"] = "tfcss_deagle_alt",
 	["DUALIES"] = "tfcss_dualelites_alt",
 	["FIVESEVEN"] = "tfcss_fiveseven_alt",
 	["GLOCK 20"] = "tfcss_glock_alt",

@@ -69,12 +69,22 @@ function GM:StartWardenVote()
 				self:Notify(warden:Name().." is the new warden!")
 				self:SetGlobalVar("warden", warden)
 				warden:SetArmor(25)
+				warden:SetModel(self.WardenModel)
 
 				JB_WARDEN_NOVOTE = false
 			end
 		end)
 
 		return true
+	else
+		local warden = table.Random( team.GetPlayers(TEAM_GUARD) )
+
+		if ( IsValid(warden) ) then
+			self:Notify(warden:Name().." has randomly been chosen as the warden!")
+			self:SetGlobalVar("warden", warden)
+			warden:SetArmor(25)
+			warden:SetModel(self.WardenModel)
+		end
 	end
 	/*
 	else
@@ -87,7 +97,6 @@ function GM:StartWardenVote()
 		end
 	end
 	*/
-
 	return false
 end
 

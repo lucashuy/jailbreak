@@ -43,16 +43,8 @@ function GM:HUDPaint()
 		self:HUDPaintTarget(entity)
 	end
 
-	//self:DrawScore(TEAM_PRISONER)
-	//self:DrawScore(TEAM_GUARD)
 	self:DrawHUD()
 
-	/*
-	if (LocalPlayer():Team() == TEAM_GUARD or LocalPlayer():Team() == TEAM_PRISONER) then
-		self:DrawCrosshair()
-	end
-	*/
-	
 	local waypoint = self:GetGlobalVar("waypoint")
 
 	if (waypoint and waypoint.x and waypoint.y and waypoint.z) then
@@ -359,8 +351,6 @@ function GM:CalcView(client, origin, angles, fov)
 
 	DELTA_SPEED = math.Approach(DELTA_SPEED, speed, 0.005)
 
-	//hell this is annoying
-	//note to self: DO NOT USE ANYTHING CLOSE TO 1 AS MULTIPLIER
 	view.angles = view.angles + Angle(speed * 0.6, strafe * -1.2, strafe*0.7)*0.5
 	view.fov = view.fov + speed
 
@@ -388,7 +378,6 @@ function GM:CalcView(client, origin, angles, fov)
 end
 
 function GM:OnSpawnMenuOpen()
-	//if (LocalPlayer():GetNWBool("amideathmatch", false)) then return end
 	RunConsoleCommand("jb_dropweapon")
 end
 
@@ -405,7 +394,7 @@ function GM:Think()
 	local teamID = LocalPlayer():Team()
 	local players = team.GetPlayers(teamID)
 
-	if (teamID == TEAM_GUARD_DEAD or teamID == TEAM_PRISONER_DEAD) then
+	if (teamID == TEAM_GUARD_DEAD or teamID == TEAM_PRISONER_DEAD || teamID == TEAM_SPECTATOR) then
 		players = player.GetAll()
 	end
 
