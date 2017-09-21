@@ -1,6 +1,14 @@
-https://creativecommons.org/licenses/by-sa/4.0/legalcode
+By using this software (anything that is included except for the "tfa_base" and "tfa_css" folders) you agree to the following terms that I (steamcommunity.com/profiles/76561198057072944) have made:
 
-This work is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License.
-To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/4.0/ or send a letter to;
+You may not redistribute this software (or any part of it) to anyone, not even to your own staff members or developers without my permission.
+You may not claim any of this software that you did not develop as your own (like claiming you made developed all of this software by yourself).
+You may not change any part of this license, and all these terms still apply if you delete this file.
 
-Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+You may use this software as many times as you want, for as many servers as you want as long as you do not violate the above terms.
+You may edit any part of this software. This is not limited to; removing files, editing files, adding files.
+
+This license can change at any time, and I do not have to tell you about said changes nor do I have to send you an updated copy (but I probably will).
+
+End of terms.
+
+Last updated: Sept 20 2017 19:33 CT
