@@ -348,7 +348,8 @@ end
 
 function GM:EntityTakeDamage(victim, dmg)
 	if(IsValid(victim) && IsValid(dmg:GetAttacker())) then
-		if(victim == ents.GetMapCreatedEntity(jb.config["opencellsButton"]) && ents.GetMapCreatedEntity(jb.config["opencellsButton"]):GetSaveTable()["m_vecFinalDest"] == Vector(0,0,0)) then //lol, googled for a solution to this and found jake's solution
+	    //lol, googled for a solution to this and found jake's solution
+		if(victim == ents.GetMapCreatedEntity(jb.config["opencellsButton"]) && ents.GetMapCreatedEntity(jb.config["opencellsButton"]):GetSaveTable()["m_vecFinalDest"] == Vector(0,0,0)) then
 			self:Notify(dmg:GetAttacker():Name() .. " has shot open the cells!")
 			print(dmg:GetAttacker():Name() .. " has shot open the cells!")
 		end
