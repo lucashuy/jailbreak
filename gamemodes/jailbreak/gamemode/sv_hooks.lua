@@ -81,7 +81,7 @@ function GM:InitPostEntity()
 end
 
 function GM:PlayerInitialSpawn(ply)
-	//hey there, you loaded in too quickly for me to handle
+	--hey there, you loaded in too quickly for me to handle
 	timer.Simple(1, function()
 		if ( !IsValid(ply) ) then
 			return
@@ -348,7 +348,7 @@ end
 
 function GM:EntityTakeDamage(victim, dmg)
 	if(IsValid(victim) && IsValid(dmg:GetAttacker())) then
-	    //lol, googled for a solution to this and found jake's solution
+	    --lol, googled for a solution to this and found jake's solution
 		if(victim == ents.GetMapCreatedEntity(jb.config["opencellsButton"]) && ents.GetMapCreatedEntity(jb.config["opencellsButton"]):GetSaveTable()["m_vecFinalDest"] == Vector(0,0,0)) then
 			self:Notify(dmg:GetAttacker():Name() .. " has shot open the cells!")
 			print(dmg:GetAttacker():Name() .. " has shot open the cells!")
@@ -374,7 +374,7 @@ function GM:PlayerDeath(victim, weapon, killer)
 		self:Notify(team.GetPlayers(TEAM_PRISONER)[1]:Name() .. " is the last prisoner alive.")
 		print(team.GetPlayers(TEAM_PRISONER)[1]:Name() .. " is the last prisoner alive.")
 	elseif (team.NumPlayers(TEAM_PRISONER) > 1 && team.NumPlayers(TEAM_GUARD) == 1) then
-		if (IsValid(team.GetPlayers(TEAM_GUARD)[1]) && !team.GetPlayers(TEAM_GUARD)[1].isLastGuard ) then //must be here for endround nuke on summer
+		if (IsValid(team.GetPlayers(TEAM_GUARD)[1]) && !team.GetPlayers(TEAM_GUARD)[1].isLastGuard ) then --must be here for endround nuke on summer
 			team.GetPlayers(TEAM_GUARD)[1].isLastGuard = true
 			self:Notify(team.GetPlayers(TEAM_GUARD)[1]:Name() .. " is the last guard alive.")
 			print(team.GetPlayers(TEAM_GUARD)[1]:Name() .. " is the last guard alive.")
@@ -572,7 +572,7 @@ function GM:PlayerCanPickupWeapon(ply, wep)
 				return false
 			end
 			
-			//so sloppy
+			--so sloppy
 			if (string.match(tostring(wepClass), "weapon_") && !ply:HasWeapon(swapMapWeapons[wepClass])) then
 				ply:Give(swapMapWeapons[wepClass])
 				if (ply:HasWeapon(swapMapWeapons[wepClass])) then
@@ -669,7 +669,7 @@ JB_SWAP_PRISONER = JB_SWAP_PRISONER or {}
 
 function GM:PlayerEnterSwaplist(ply)	
 	local currentPlyTeam = ply:Team()
-	//local swapPlyTeam = ((currentPlyTeam == TEAM_GUARD || currentPlyTeam == TEAM_GUARD_DEAD) and 1 or 2)
+	--local swapPlyTeam = ((currentPlyTeam == TEAM_GUARD || currentPlyTeam == TEAM_GUARD_DEAD) and 1 or 2)
 	
 	if (sqlCheckGuardban(ply:SteamID())) && (currentPlyTeam == TEAM_PRISONER || currentPlyTeam == TEAM_PRISONER_DEAD) then
 		self:Notify("You are guardbanned! You cannot join the guards team.", ply)
